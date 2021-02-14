@@ -136,7 +136,7 @@ def show(limit=0):
 
     # Si está definido el limite aplicarlo
     if limit > 0:
-        query.limit(limit)
+        query = query.limit(limit)
 
     # Leer una persona a la vez e imprimir en pantalla
     for persona in query:
