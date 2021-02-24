@@ -81,6 +81,7 @@ def insert_nacionalidad(country):
     # Agregar la nacionalidad a la DB
     session.add(nationality)
     session.commit()
+    print(nationality)
 
 
 def insert_persona(name, age, country):
@@ -106,6 +107,7 @@ def insert_persona(name, age, country):
     # Agregar la persona a la DB
     session.add(person)
     session.commit()
+    print(person)
 
 
 def fill():
@@ -202,7 +204,7 @@ if __name__ == '__main__':
     count_persona('Argentina')
 
     update_persona_nationality('Max', 'Holanda')
-    show()
+    show(2)
 
     insert_persona('Max', 40, 'Estados Unidos')
     insert_persona('SQL', 13, 'Inglaterra')
