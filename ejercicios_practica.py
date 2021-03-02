@@ -25,7 +25,6 @@ from sqlalchemy.orm import sessionmaker, relationship
 # Crear el motor (engine) de la base de datos
 engine = sqlalchemy.create_engine("sqlite:///secundaria.db")
 base = declarative_base()
-session = sessionmaker(bind=engine)()
 
 
 class Tutor(base):
