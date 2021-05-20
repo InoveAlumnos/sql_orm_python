@@ -18,8 +18,8 @@ __email__ = "alumnos@inove.com.ar"
 __version__ = "1.1"
 
 import csv
-import requests
 import time
+import asyncio
 
 # SqlAlchemy
 import sqlalchemy
@@ -27,12 +27,17 @@ from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
 
+# Librerias asyncronicas, necesitan instalar:
+# pip install aiohttp
+import aiohttp
+
 # Creo el motor (engine) de la base de datos
 engine = sqlalchemy.create_engine("sqlite:///articulos_mercadolibre.db")
 base = declarative_base()
 
 
-def persist(data):
+# Funciones asyncronicas
+async def persist(data):
     '''Persistir en la base de datos el articulo'''    
     Session = sessionmaker(bind=engine)
     session = Session()
@@ -45,12 +50,15 @@ def persist(data):
     session.commit()
 
 
-def fetch(url):
-    '''Consultar los datos en la URL'''
+async def fetch(url):
+    '''Consultar de forma asincrónica por los datos en la URL'''
     try:
-        data = requests.get(url).json()
-        body_data = data[0]['body']
-        persist(body_data)
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url) as response:
+
+                data = await response.json()
+                body_data = data[0]['body']
+                await persist(body_data)
     except Exception as e:
         #print("request Excep", e)
         return
@@ -78,8 +86,10 @@ def create_schema():
     base.metadata.create_all(engine)
 
 
-def fill():
+async def fill():
 
+    N = 50
+    tasks = []
     t1 = time.time()
     with open('meli_technical_challenge_data.csv', 'r') as f:
         data = list(csv.DictReader(f))
@@ -89,7 +99,16 @@ def fill():
 
             url = 'https://api.mercadolibre.com/items?ids={}'.format(item)
 
-            fetch(url)
+            tasks.append(fetch(url))
+            # Hasta no tener N task acumuladas no las ejecuto
+            if len(tasks) == N:
+                await asyncio.gather(*tasks)
+                tasks = []
+
+        # Completado el bucle ejecuto las tasks pendients
+        if tasks:
+            await asyncio.gather(*tasks)
+
 
     t2 = time.time()
     print("Tiempo de procesamiento:", t2-t1)
@@ -99,5 +118,5 @@ if __name__ == "__main__":
   create_schema()
 
   # Completar la DB, lanzar rutinas asyncronicas
-  fill()
+  asyncio.run(fill())
   

@@ -15,9 +15,7 @@ __Ejercicios para que el alumno desarrolle lo visto en clase__\
 ejercicios_practica.py
 
 __Ejercicios para que el alumno profundice sobre el tema durante la semana__\
-ejercicios_profundizacion.md\
-libreria_libro.csv\
-libreria_autor.csv
+ejercicios_profundizacion.md
 
 __Archivos de configuración__\
 config.py\

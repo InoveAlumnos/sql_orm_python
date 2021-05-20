@@ -1,44 +1,75 @@
-# Ejercicios de profundización [Python]
-EL propósito de este ejercicio es que el alumno ponga sus habilidades de SQL junto con otras adqueridas a lo largo de la carrera como el manejo de archivos CSV. Este es un caso típico de ETL en donde se transforma un sistema legacy de datos (un archivo) en una base de datos.
+# Ejercicios de práctica [Python]
+A esta altura del curso el alumno posee ya una serie de habilidades muy vinculadas entre si las cuales son:
+- Análisis, filtrado y trabajo de información.
+- Capacidad para utilizar formatos de datos de transacciones, APIs, Apps.
+- Manipular y crear base de datos.
+
+EL propósito de este ejercicio es que el alumno ponga a prueba estas facultades con un clásico ejercicio de "challenge" técnico de Mercado Libre (MELI), lo próximo que se verá de aquí en más son herramientas o procesos para mejorar estos 3 pilares (bases de datos, JSON, consumir API).
+
+# MELI API [Python]
+Haremos uso de la API pública de mercadolibre para obtener los datos de items a la venta, muy similar a lo que ya estuvieron practicando pero dándole el enfoque de una problemática real.
 
 # Enunciado
-El objetivo es realizar un ejercicio muy similar al de "ejercicios_clase" pero ahora el alumno será quien genere clases de la base de datos para construirla.\
+El objetivo es consumir los datos que provee el archivo CSV "meli_technical_challenge_data.csv". Dicho archivo está compuesto por la siguiente estructura:
+- Columna site --> columna texto de 3 caracteres
+- Coulmna id --> columna numérica
 
-Deberá generar una base de datos de libros basada en los archivo CSV libreria_autor.csv y libreria_libro.csv, los cuales poseen las siguientes clase:\
-Clase Autor:
-- id del autor (id) --> número (clave primaria, autoincremental)
-- Nombre del autor (name) --> texto
+Nota: Alumno debe descartar aquellas filas que presente datos corruptos o incompletos.\
+Con el site + id se forma el "id" del producto (item), por ejemplo la primera file tiene:
+- site: MLA
+- id: 845041373
 
-Clase Libro:
-- id del libro (id) --> número (clave primaria, autoincremental)
-- Título del libro (title) --> texto
-- Cantidad de páginas (pags) --> número
-- id del autor (author_id) --> número (clave foránea)
-- Objecto autor (author) --> objeto relación (relationship)
+Esto forma el item con id MLA845041373\
+
+El objetivo es que utilicen la siguiente API URL para consumir la información de cada item en la lista:
+url = 'https://api.mercadolibre.com/items?ids=MLA845041373'
+
+Debe reemplazar en el string de la URL con cada item id que formen a partir del archivo CSV. Cada consulta les traerá la siguiente información (ejemplo con MLA845041373):
+
+```
+{
+  "code": 200,
+  "body": [
+    "id": "MLA845041373",
+    "site_id": "ML4",
+    "title": "Medidor Digital De Energía, Voltaje 100a,",
+    ...
+    "price": 2900,
+    ...
+    "currency_id": "ARS"
+    ...
+    "initial_quantity": 4,
+    "available_quantity": 0,
+    "sold_quantity": 4,
+    ...
+}
+```
+
+Nota: Alumno solo es necesario que capture todos los campos especificados en el ejemplo anterior, si alguno de los campos no está disponible en la consulta debe descartar ese item. Los campos en definitiva importantes son:
+- id
+- site_id
+- title
+- price
+- currency_id
+- initial_quantity
+- available_quantity
+- sold_quantity
+
+Notar que en el medio de la URL se está especificando que queremos obtener los Departamentos y Alquileres en la Ciudad de "__Mendoza__". Esto pueden modificarlo para jugar y obtener diferentes resultados.
+
 
 ## create_schema
-Deben crear una función "create_schema" la cual se encargará de crear la base de datos y la tabla correspondiente al esquema definido. Deben usar la sentencia CREATE para crear la tabla mencionada.\
-IMPORTANTE: Recuerden que es recomendable para estos ejercicios que se borre toda la base de datos al llamar a create_schema
+Deben crear una función "create_schema" la cual se encargará de crear la base de datos y la tabla correspondiente al esquema definido. Deben usar la sentencia CREATE para crear la tabla con los campos mencionados.\
+IMPORTANTE: Recuerden que es recomendable borrar la tabla (DROP) antes de crearla si es que existe para que no haya problemas al ejecutar la query.
 
 ## fill()
-Deben crear una función "fill" que lea los datos de los archivos CSV y cargue esas filas de los archivos como datos de las tablas SQL. Pueden resolverlo de la forma que mejor crean. Recordatorio, primero crear los autores y luego los libros.
+Deben crear una función "fill" que lea los datos del archivo CSV y cargue las respuestas de la API como filas de la tabla SQL. Pueden resolverlo de la forma que mejor crean. Deben usar la sentencia INSERT para insertar los datos.\
 
 ## fetch(id)
-Deben crear una función que imprima en pantalla los resultados de la tabla "libro", pueden usar esta función para ver que "fill" realizó exactamente lo que era esperado. 
-- En caso de que el id sea igual a cero (id=0) deben imprimir todos los resultados de la tabla "libro".
-- En caso de que id sea mayor a cero (id>0) deben imprimir solamente el libro correspondiente a ese id.
-- Deben usar la sentencia "filter" cuando se desea visualizar un libro en particular.
-IMPORTANTE: Es posible que pasen como id un número no definido en la tabla y el sistema de fetchone les devuelva None, lo cual es correcto, pero el sistema no debe explotar porque haya retornado None. En ese caso pueden imprimir en pantalla que no existe ese libro en la base de datos.
+Deben crear una función que imprima en pantalla filas de su base de datos, pueden usar esta función para ver que "fill" realizó exactamente lo que era esperado. Deben usar la sentencia SELECT para llegar al objetivo junto con WHERE para leer la fila deseada (si se desea leer una en particular).\
+Esta función recibe como parámetro un id (ejemplo MLA845041373) deben imprimir sola la fila correspondiente a ese id.
+IMPORTANTE: Es posible que pasen como id un item no definido en la tabla y el sistema de fetchone les devuelva None, lo cual es correcto, pero el sistema no debe explotar porque haya retornado None. En ese caso pueden imprimir en pantalla que no existe esa fila en la base de datos (más adelante en una API responderá Error 404).
 
-## search_author(book_title)
-Deben crear una función que retorne el autor que pertenece al título del libro pasado como parámetro a esta función. Deben crear una query usando la sentencia "join" junto con "filter" para buscar el autor correspondiente al libro.\
-Al finalizar la función rebe retornar el autor:
-```
-    return author
-```
-
-## Esquema del ejercicio
-Deben crear su archivo de python y crear las funciones mencionadas en este documento. Deben crear la sección "if _name_ == "_main_" y ahí crear el flujo de prueba de este programa:
 ```
 if __name__ == "__main__":
   # Crear DB
@@ -48,11 +79,13 @@ if __name__ == "__main__":
   fill()
 
   # Leer filas
-  fetch()  # Ver todo el contenido de la DB
-  fetch(3)  # Ver la fila 3
-  fetch(20)  # Ver la fila 20
-
-  # Buscar autor
-  print(search_author('Relato de un naufrago'))
+  fetch('MLA845041373')
+  fetch('MLA717159516')
 
 ```
+
+## Para jugar
+Cuando finalicen el ejercicio pueden realizar un sistema de compras. Pueden pasarle a su sistema el carrito de un cliente con todos los IDs de los productos comprados por la persona y el sistema podría devolver el monto total de compra.
+
+## Anexo
+En la carpeta de anexo encontrará este ejercicio resuelto, como también una forma mejorada utilizando "async" para acelerar drástica mente el código (async no fue visto en clase y requeire instalar una librería adicional como se explica en el ejercicio).
