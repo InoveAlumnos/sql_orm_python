@@ -149,6 +149,19 @@ def modify(id, name):
 
     # TIP: En clase se hizo lo mismo para las nacionalidades con
     # en la función update_persona_nationality
+    Session = sessionmaker(bind=engine)
+    session = Session()
+
+    result = session.query(Tutor).filter(Tutor.name == name)
+    tutor = result.first()
+       
+    result = session.query(Estudiante).filter(Estudiante.id == id)
+    estudiante = result.first()
+    estudiante.tutor_id = tutor.id
+    
+    session.add(estudiante)
+    session.commit()
+
 
 
 def count_grade(grade):
@@ -159,7 +172,12 @@ def count_grade(grade):
 
     # TIP: En clase se hizo lo mismo para las nacionalidades con
     # en la función count_persona
+    Session = sessionmaker(bind=engine)
+    session = Session()
 
+    result = session.query(Estudiante).filter(Estudiante.grade == grade).count()
+    print('cantidad de estidantes en el grado', grade ,': ', result)
+        
 
 if __name__ == '__main__':
     print("Bienvenidos a otra clase de Inove con Python")
@@ -170,9 +188,9 @@ if __name__ == '__main__':
     tutor = 'Julian'
     search_by_tutor(tutor)
 
-    nuevo_tutor = 'nombre_tutor'
+    nuevo_tutor = 'Sandra'
     id = 2
-    # modify(id, nuevo_tutor)
+    modify(id, nuevo_tutor)
 
-    grade = 2
-    # count_grade(grade)
+    grade = 3
+    count_grade(grade)
