@@ -55,8 +55,6 @@ Nota: Alumno solo es necesario que capture todos los campos especificados en el 
 - available_quantity
 - sold_quantity
 
-Notar que en el medio de la URL se está especificando que queremos obtener los Departamentos y Alquileres en la Ciudad de "__Mendoza__". Esto pueden modificarlo para jugar y obtener diferentes resultados.
-
 
 ## create_schema
 Deben crear una función "create_schema" la cual se encargará de crear la base de datos y la tabla correspondiente al esquema definido. Deben usar la sentencia CREATE para crear la tabla con los campos mencionados.\
