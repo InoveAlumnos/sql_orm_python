@@ -1,16 +1,14 @@
 __author__ = "Damian Safdie"
 __email__ = "damiansafdie@gmail.com"
 
-
 import csv
+import requests
 import sqlalchemy
 
-# SqlAlchemy
+
 from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
-
-# Creo el motor (engine) de la base de datos
 engine = sqlalchemy.create_engine("sqlite:///articulos_mercadolibre.db")
 base = declarative_base()
 
@@ -36,38 +34,48 @@ def create_schema():
     base.metadata.drop_all(engine)
     base.metadata.create_all(engine)
 
+
+def agrego_db(dato):
+    Session = sessionmaker(bind=engine)
+    session = Session()   
+    articulo = Articulo(id=dato['id'], site_id=dato['site_id'], title=dato['title'], price=dato['price'],
+                    currency_id=dato['currency_id'], initial_quantity=dato['initial_quantity'],
+                    available_quantity=dato['available_quantity'], sold_quantity=dato['sold_quantity'])
+    session.add(articulo)
+    session.commit()
+    
+
 def fill():
+    with open('meli_technical_challenge_data.csv', 'r') as arch:
+        data = list(csv.DictReader(arch))
+        for x in data:
+            item = x['site'] + x['id']
+            print(" Generando: ", item)
+            url = 'https://api.mercadolibre.com/items?ids={}'.format(item)
+            try:
+                un_dato = requests.get(url).json()        
+                dato = un_dato[0]['body']
+                agrego_db(dato)                
+            except:
+                pass
+                   
+def fetch(dato):
+    print ("comsulta para el codigo:", dato)
     Session = sessionmaker(bind=engine)
     session = Session()
-
-    #tutor = Tutor(name='Julian')
-    #session.add(tutor)        
-    
-    session.commit()    
+    result = session.query(Articulo).filter(Articulo.id == dato)
+    if result.count() > 0:        
+        for x in result:
+            print(x)
+    else:
+        print ("Inexixtente")
 
 
 if __name__ == "__main__":
   create_schema()
+  fill()
+  fetch('MLA845041373')
+  fetch('MLA717159516')
+  fetch('MLA843335445')
+  fetch('MLA843675412')
 
-  # Completar la DB con el CSV
-  #fill()
-
-  # Leer filas
-  #fetch('MLA845041373')
-  #fetch('MLA717159516')
-
-
-
-
-
-'''
-## Para jugar
-Cuando finalicen el ejercicio pueden realizar un sistema de compras.
-Pueden pasarle a su sistema el carrito de un cliente con todos los IDs
-de los productos comprados por la persona y el sistema podría devolver
-el monto total de compra.
-
-## Anexo
-En la carpeta de anexo encontrará este ejercicio resuelto, como también una forma mejorada utilizando "async" para acelerar drástica mente el código (async no fue visto en clase y 
-requeire instalar una librería adicional como se explica en el ejercicio).
-'''
