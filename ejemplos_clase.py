@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 '''
-SQL Introducción [Python]
+SQL ORM [Python]
 Ejemplos de clase
 ---------------------------
 Autor: Inove Coding School
-Version: 1.2
+Version: 2.0
 
 Descripcion:
 Programa creado para mostrar ejemplos prácticos de los visto durante la clase
@@ -12,12 +12,11 @@ Programa creado para mostrar ejemplos prácticos de los visto durante la clase
 
 __author__ = "Inove Coding School"
 __email__ = "alumnos@inove.com.ar"
-__version__ = "1.2"
+__version__ = "2.0"
 
-import os
+# https://extendsclass.com/sqlite-browser.html
+
 import csv
-import sqlite3
-
 import sqlalchemy
 from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
@@ -26,15 +25,6 @@ from sqlalchemy.orm import sessionmaker, relationship
 # Crear el motor (engine) de la base de datos
 engine = sqlalchemy.create_engine("sqlite:///personas_nacionalidad.db")
 base = declarative_base()
-
-from config import config
-
-# Obtener la path de ejecución actual del script
-script_path = os.path.dirname(os.path.realpath(__file__))
-
-# Obtener los parámetros del archivo de configuración
-config_path_name = os.path.join(script_path, 'config.ini')
-dataset = config('dataset', config_path_name)
 
 
 class Nacionalidad(base):
@@ -53,10 +43,10 @@ class Persona(base):
     age = Column(Integer)
     nacionalidad_id = Column(Integer, ForeignKey("nacionalidad.id"))
 
-    nacionalidad = relationship("Nacionalidad")
+    nationality = relationship("Nacionalidad")
 
     def __repr__(self):
-        return f"Persona:{self.name} con nacionalidad {self.nacionalidad.country}"
+        return f"Persona:{self.name} con nacionalidad {self.nationality.country}"
 
 
 def create_schema():
@@ -100,8 +90,7 @@ def insert_persona(name, age, country):
         return
 
     # Crear la persona
-    person = Persona(name=name, age=age)
-    person.nacionalidad = nationality
+    person = Persona(name=name, age=age, nationality=nationality)
 
     # Agregar la persona a la DB
     session.add(person)
@@ -112,19 +101,19 @@ def insert_persona(name, age, country):
 def fill():
     # Insertar el archivo CSV de nacionalidades
     # Insertar fila a fila
-    with open(dataset['nationality']) as fi:
+    with open('nacionalidad.csv') as fi:
         data = list(csv.DictReader(fi))
 
-        for row in data:
-            insert_nacionalidad(row['nationality'])
+    for row in data:
+        insert_nacionalidad(row['nationality'])
 
     # Insertar el archivo CSV de personas
     # Insertar todas las filas juntas
-    with open(dataset['person']) as fi:
+    with open('persona.csv') as fi:
         data = list(csv.DictReader(fi))
 
-        for row in data:
-            insert_persona(row['name'], int(row['age']), row['nationality_id'])
+    for row in data:
+        insert_persona(row['name'], int(row['age']), row['nationality_id'])
 
 
 def show(limit=0):
@@ -144,6 +133,18 @@ def show(limit=0):
         print(persona)
 
 
+def get_all():
+    # Crear la session
+    Session = sessionmaker(bind=engine)
+    session = Session()
+
+    # Buscar todas las personas
+    query = session.query(Persona)
+    personas = query.all()
+
+    return personas
+
+
 def update_persona_nationality(name, country):
     # Crear la session
     Session = sessionmaker(bind=engine)
@@ -153,15 +154,12 @@ def update_persona_nationality(name, country):
     query = session.query(Nacionalidad).filter(Nacionalidad.country == country)
     nationality = query.first()
 
-    # Actualizar la persona con nombre "name"
-    #session.query(Persona).filter(Persona.name == name).update({Persona.nacionalidad_id: nationality.id})
-
     # Buscar la persona que se desea actualizar
     query = session.query(Persona).filter(Persona.name == name)
     person = query.first()
 
-    # Actualizar la persona con nombre "name"
-    person.nacionalidad = nationality
+    # Actualizar la nacionalidad de la persona con nombre "name"
+    person.nationality = nationality
 
     # Aunque la persona ya existe, como el id coincide
     # se actualiza sin generar una nueva entrada en la DB
@@ -188,8 +186,8 @@ def count_persona(nationality):
     Session = sessionmaker(bind=engine)
     session = Session()
 
-    result = session.query(Persona).join(Persona.nacionalidad).filter(Nacionalidad.country == nationality).count()
-    print('Personas de', nationality, 'encontradas:', result)
+    result = session.query(Persona).join(Persona.nationality).filter(Nacionalidad.country == nationality).count()
+    return result
 
 
 if __name__ == '__main__':
@@ -200,7 +198,12 @@ if __name__ == '__main__':
     fill()
     show()
 
-    count_persona('Argentina')
+    personas = get_all()
+    print("Personas en la base de datos:")
+    print(personas)
+
+    result = count_persona('Argentina')
+    print('Personas encontradas de Argentina:', result)
 
     update_persona_nationality('Max', 'Holanda')
     show(2)
